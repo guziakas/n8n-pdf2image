@@ -20,9 +20,9 @@
     "build": "tsc && npm run copy:assets",
     "copy:assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" \"credentials/*.json\" dist/",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
+    "format": "prettier nodes --write",
+    "lint": "eslint nodes package.json",
+    "lintfix": "eslint nodes package.json --fix",
     "test": "echo \"No tests specified\" && exit 0",
     "prepublishOnly": "npm run build && npm run lint -s"
   },
@@ -43,13 +43,13 @@
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.0",
     "prettier": "^3.0.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "pdf2pic": "^2.1.4"
   },
   "peerDependencies": {
-    "n8n-workflow": "*",
-    "n8n-core": "*"
+    "n8n-core": "*",
+    "n8n-workflow": "*"
   }
 }
