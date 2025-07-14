@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Run tests (if any)
+        run: npm test
+        continue-on-error: true
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Changes in v${{ steps.get_version.outputs.VERSION }}
+            
+            ### Installation
+            Install this community node in n8n by going to:
+            **Settings > Community Nodes > Install**
+            
+            Enter package name: `n8n-nodes-pdf2image`
+            
+            ### Features
+            - Convert PDF files to images (PNG/JPEG)
+            - Support for page ranges and bulk conversion
+            - Configurable quality and density settings
+            
+            For detailed usage instructions, see the [README](https://github.com/guziakas/n8n-pdf2image#readme).
+          draft: false
+          prerelease: false
+
+      - name: Upload package to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./n8n-nodes-pdf2image-${{ steps.get_version.outputs.VERSION }}.tgz
+          asset_name: n8n-nodes-pdf2image-${{ steps.get_version.outputs.VERSION }}.tgz
+          asset_content_type: application/gzip
