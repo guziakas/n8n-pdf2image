@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -23,6 +23,17 @@ jobs:
 
       - name: Build package
         run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "Checking dist structure:"
+          ls -la dist/
+          echo "Checking for main node file:"
+          ls -la dist/Pdf2Image.node.js
+          echo "Checking nodes directory:"
+          ls -la dist/nodes/ || echo "No nodes directory"
+          echo "Package.json n8n config:"
+          cat package.json | grep -A 5 '"n8n"'
 
       - name: Run tests (if any)
         run: npm test
@@ -38,6 +49,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

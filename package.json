@@ -32,7 +32,7 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/nodes/Pdf2Image/Pdf2Image.node.js"
+      "dist/Pdf2Image.node.js"
     ]
   },
   "devDependencies": {
