@@ -6,19 +6,19 @@
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/username/n8n-nodes-pdf2image",
+  "homepage": "https://github.com/guziakas/n8n-pdf2image",
   "author": {
-    "name": "Your Name",
+    "name": "guziakas",
     "email": "your.email@example.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/username/n8n-nodes-pdf2image.git"
+    "url": "git+https://github.com/guziakas/n8n-pdf2image.git"
   },
   "main": "index.js",
   "scripts": {
     "build": "tsc && npm run copy:assets",
-    "copy:assets": "copyfiles credentials/*.json nodes/**/*.png dist/",
+    "copy:assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" \"credentials/*.json\" dist/",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",

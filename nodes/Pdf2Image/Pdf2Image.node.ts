@@ -1,5 +1,5 @@
-import { IExecuteFunctions } from 'n8n-core';
 import {
+	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
@@ -7,6 +7,7 @@ import {
 	IDataObject,
 	IBinaryData,
 	BINARY_ENCODING,
+	NodeConnectionType,
 } from 'n8n-workflow';
 
 import { fromPath } from 'pdf2pic';
@@ -26,8 +27,8 @@ export class Pdf2Image implements INodeType {
 		defaults: {
 			name: 'PDF to Image',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		properties: [
 			{
 				displayName: 'Operation',
@@ -184,7 +185,7 @@ export class Pdf2Image implements INodeType {
 		],
 	};
 
-	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[]> {
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
@@ -240,11 +241,12 @@ export class Pdf2Image implements INodeType {
 						let convertResult;
 						
 						if (convertAllPages) {
-							// Convert all pages
-							convertResult = await convert.bulk(-1);
+							// Convert all pages - bulk method returns all pages
+							const bulkResult = convert.bulk && await convert.bulk(-1);
+							convertResult = bulkResult || [];
 						} else {
 							// Parse page range
-							const pages = this.parsePageRange(pageRange);
+							const pages = Pdf2Image.parsePageRange(pageRange);
 							convertResult = [];
 							
 							for (const page of pages) {
@@ -258,7 +260,7 @@ export class Pdf2Image implements INodeType {
 							// Multiple pages
 							for (let pageIndex = 0; pageIndex < convertResult.length; pageIndex++) {
 								const result = convertResult[pageIndex];
-								const imagePath = result.path;
+								const imagePath = (result as any).path;
 								
 								const imageBuffer = await fs.readFile(imagePath);
 								const fileName = `page_${pageIndex + 1}.${format}`;
@@ -286,7 +288,7 @@ export class Pdf2Image implements INodeType {
 							}
 						} else {
 							// Single page
-							const imagePath = convertResult.path;
+							const imagePath = (convertResult as any).path;
 							const imageBuffer = await fs.readFile(imagePath);
 							const fileName = `page_1.${format}`;
 							
@@ -329,7 +331,7 @@ export class Pdf2Image implements INodeType {
 				if (this.continueOnFail()) {
 					returnData.push({
 						json: items[i].json,
-						error: error instanceof Error ? error.message : String(error),
+						error: error instanceof Error ? new NodeOperationError(this.getNode(), error) : new NodeOperationError(this.getNode(), String(error)),
 					});
 					continue;
 				}
@@ -337,10 +339,10 @@ export class Pdf2Image implements INodeType {
 			}
 		}
 
-		return returnData;
+		return [returnData];
 	}
 
-	private parsePageRange(pageRange: string): number[] {
+	private static parsePageRange(pageRange: string): number[] {
 		const pages: number[] = [];
 		const parts = pageRange.split(',');
 
