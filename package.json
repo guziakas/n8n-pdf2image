@@ -1,0 +1,53 @@
+{
+  "name": "n8n-nodes-pdf2image",
+  "version": "1.0.0",
+  "description": "n8n node to convert PDF files to images",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/username/n8n-nodes-pdf2image",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/n8n-nodes-pdf2image.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && npm run copy:assets",
+    "copy:assets": "copyfiles credentials/*.json nodes/**/*.png dist/",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -s"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "dist/nodes/Pdf2Image/Pdf2Image.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.0",
+    "@typescript-eslint/parser": "~5.45",
+    "copyfiles": "^2.4.1",
+    "eslint": "^8.26.0",
+    "eslint-plugin-n8n-nodes-base": "^1.11.0",
+    "prettier": "^2.7.1",
+    "typescript": "~4.8.4"
+  },
+  "dependencies": {
+    "pdf2pic": "^2.1.4"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*",
+    "n8n-core": "*"
+  }
+}
