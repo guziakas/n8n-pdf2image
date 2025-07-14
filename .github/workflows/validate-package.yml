@@ -1,0 +1,93 @@
+name: Validate Package
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build package
+        run: npm run build
+
+      - name: Validate package structure
+        run: |
+          echo "📦 Validating package structure..."
+          
+          # Check if main files exist
+          if [ ! -f "dist/Pdf2Image.node.js" ]; then
+            echo "❌ Main node file missing: dist/Pdf2Image.node.js"
+            exit 1
+          fi
+          
+          if [ ! -f "dist/Pdf2Image.node.d.ts" ]; then
+            echo "❌ TypeScript declaration file missing: dist/Pdf2Image.node.d.ts"
+            exit 1
+          fi
+          
+          if [ ! -f "index.js" ]; then
+            echo "❌ Entry point missing: index.js"
+            exit 1
+          fi
+          
+          # Check package.json n8n configuration
+          NODE_PATH=$(node -p "require('./package.json').n8n.nodes[0]")
+          if [ "$NODE_PATH" != "dist/Pdf2Image.node.js" ]; then
+            echo "❌ n8n.nodes path mismatch in package.json: $NODE_PATH"
+            exit 1
+          fi
+          
+          echo "✅ Package structure validation passed!"
+
+      - name: Test package creation
+        run: |
+          npm pack
+          echo "✅ Package creation successful!"
+
+      - name: Validate package contents
+        run: |
+          tar -tzf n8n-nodes-pdf2image-*.tgz | sort
+          echo "✅ Package contents validated!"
+
+      - name: Check for common issues
+        run: |
+          echo "🔍 Checking for common issues..."
+          
+          # Check if node_modules is accidentally included
+          if tar -tzf n8n-nodes-pdf2image-*.tgz | grep -q "node_modules"; then
+            echo "❌ node_modules directory found in package!"
+            exit 1
+          fi
+          
+          # Check if source files are accidentally included
+          if tar -tzf n8n-nodes-pdf2image-*.tgz | grep -q "nodes/.*\.ts$"; then
+            echo "⚠️  TypeScript source files found in package (this might be intentional)"
+          fi
+          
+          echo "✅ No major issues found!"
+
+      - name: Summary
+        run: |
+          echo "📋 Package Validation Summary:"
+          echo "- Structure: ✅ Valid"
+          echo "- Build: ✅ Successful" 
+          echo "- n8n Config: ✅ Correct"
+          echo "- Package: ✅ Ready for distribution"

@@ -39,8 +39,12 @@ npm ci
 npm run lint
 npm run build
 
-# Bump version and create tag
-Write-Host "📝 Bumping version..." -ForegroundColor Blue
+# Get current version
+$currentVersion = (Get-Content package.json | ConvertFrom-Json).version
+Write-Host "Current version: $currentVersion" -ForegroundColor Yellow
+
+# Bump version automatically
+Write-Host "📝 Bumping $ReleaseType version..." -ForegroundColor Blue
 $newVersion = npm version $ReleaseType --no-git-tag-version
 Write-Host "New version: $newVersion" -ForegroundColor Green
 
@@ -49,12 +53,15 @@ npm install --package-lock-only
 
 # Commit version bump
 git add package.json package-lock.json
-git commit -m "chore: bump version to $newVersion"
+git commit -m "chore: bump version to $newVersion
+
+Automated $ReleaseType version bump for release"
 
 # Create and push tag
-git tag $newVersion
+$tagName = $newVersion
+git tag $tagName
 git push origin $currentBranch
-git push origin $newVersion
+git push origin $tagName
 
 Write-Host "✅ Release $newVersion created successfully!" -ForegroundColor Green
 Write-Host "🔄 GitHub Actions will now:" -ForegroundColor Yellow

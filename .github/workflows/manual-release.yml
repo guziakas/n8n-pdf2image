@@ -1,0 +1,155 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+      skip-npm:
+        description: 'Skip npm publish (for testing)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and linting
+        run: |
+          npm run lint
+          npm test
+
+      - name: Build package
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "Checking dist structure:"
+          ls -la dist/
+          echo "Checking for main node file:"
+          ls -la dist/Pdf2Image.node.js
+          echo "Package.json n8n config:"
+          cat package.json | grep -A 5 '"n8n"'
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump version
+        id: bump_version
+        run: |
+          NEW_VERSION=$(npm version ${{ github.event.inputs.version-type }} --no-git-tag-version)
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+          
+          # Update package-lock.json
+          npm install --package-lock-only
+
+      - name: Commit version bump
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ steps.bump_version.outputs.new }}
+
+          Automated ${{ github.event.inputs.version-type }} version bump via GitHub Actions"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ steps.bump_version.outputs.new }}
+          git push origin main
+          git push origin ${{ steps.bump_version.outputs.new }}
+
+      - name: Create package
+        run: npm pack
+
+      - name: Publish to npm
+        if: ${{ github.event.inputs.skip-npm != 'true' }}
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Extract version number
+        id: extract_version
+        run: |
+          VERSION_NUM=${GITHUB_REF#refs/tags/v}
+          echo "number=${VERSION_NUM}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new }}
+          release_name: Release ${{ steps.bump_version.outputs.new }}
+          body: |
+            ## Changes in ${{ steps.bump_version.outputs.new }}
+            
+            **Release Type:** ${{ github.event.inputs.version-type }}
+            **Previous Version:** ${{ steps.current_version.outputs.current }}
+            
+            ### Installation
+            Install this community node in n8n by going to:
+            **Settings > Community Nodes > Install**
+            
+            Enter package name: `n8n-nodes-pdf2image`
+            
+            ### Features
+            - Convert PDF files to images (PNG/JPEG)
+            - Support for page ranges and bulk conversion  
+            - Configurable quality and density settings
+            - Fixed file path issues for proper n8n loading
+            
+            For detailed usage instructions, see the [README](https://github.com/guziakas/n8n-pdf2image#readme).
+            
+            ---
+            *This release was created automatically via GitHub Actions*
+          draft: false
+          prerelease: false
+
+      - name: Upload package to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./n8n-nodes-pdf2image-${{ steps.extract_version.outputs.number }}.tgz
+          asset_name: n8n-nodes-pdf2image-${{ steps.extract_version.outputs.number }}.tgz
+          asset_content_type: application/gzip
+
+      - name: Release Summary
+        run: |
+          echo "🎉 Release ${{ steps.bump_version.outputs.new }} completed successfully!"
+          echo "📦 Package published to npm: https://www.npmjs.com/package/n8n-nodes-pdf2image"
+          echo "📋 GitHub release: https://github.com/guziakas/n8n-pdf2image/releases/tag/${{ steps.bump_version.outputs.new }}"
+          echo "⚠️  Note: If npm publish failed, check if NPM_TOKEN is configured in repository secrets"

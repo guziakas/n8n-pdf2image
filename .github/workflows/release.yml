@@ -46,7 +46,11 @@ jobs:
 
       - name: Get version from tag
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          # Extract version from tag (removes 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
 
       - name: Create GitHub Release
         id: create_release

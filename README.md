@@ -76,36 +76,49 @@ npm pack
 
 ## Release Process
 
-This project uses automated releases via GitHub Actions. To create a new release:
+This project features **fully automated releases** with multiple options:
 
-### Option 1: Use the release script (Recommended)
-
-```bash
-# For patch version (1.0.0 -> 1.0.1)
-./release.ps1 patch
-
-# For minor version (1.0.0 -> 1.1.0)
-./release.ps1 minor
-
-# For major version (1.0.0 -> 2.0.0)
-./release.ps1 major
-```
-
-### Option 2: Manual release
+### Option 1: Local Release Script (Recommended)
 
 ```bash
-# Bump version in package.json
-npm version patch  # or minor/major
-
-# Push the tag
-git push origin main
-git push origin v1.x.x
+# Automatically bumps version, commits, tags, and triggers release
+.\release.ps1 patch   # 1.0.3 → 1.0.4 (bug fixes)
+.\release.ps1 minor   # 1.0.3 → 1.1.0 (new features)  
+.\release.ps1 major   # 1.0.3 → 2.0.0 (breaking changes)
 ```
 
-The GitHub Actions workflow will automatically:
-1. Build and test the package
-2. Publish to npm registry
-3. Create a GitHub release with release notes
+The script automatically:
+- ✅ Bumps version in package.json
+- ✅ Updates package-lock.json
+- ✅ Commits changes with proper message
+- ✅ Creates and pushes git tag
+- ✅ Triggers automated GitHub release
+
+### Option 2: GitHub Manual Release
+
+1. Go to GitHub Actions → **Manual Release**
+2. Click **Run workflow**
+3. Select version type (patch/minor/major)
+4. Optionally skip npm publish for testing
+5. Click **Run workflow**
+
+### Option 3: Manual Git Commands
+
+```bash
+# Only if you need full control
+npm version patch
+git push origin main --tags
+```
+
+### Automated Pipeline Features
+
+Both release methods trigger the same automated pipeline:
+
+1. 🔧 **Build & Test**: Compiles TypeScript, runs linting
+2. 📦 **Package Validation**: Verifies file structure and n8n config
+3. 🚀 **npm Publish**: Publishes to npm registry (if NPM_TOKEN configured)
+4. 📋 **GitHub Release**: Creates release with changelog and assets
+5. 📎 **Asset Upload**: Attaches .tgz package file
 
 ### Setup Requirements for Automated Releases
 

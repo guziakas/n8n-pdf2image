@@ -44,8 +44,12 @@ npm ci
 npm run lint
 npm run build
 
-# Bump version and create tag
-echo "📝 Bumping version..."
+# Get current version
+CURRENT_VERSION=$(node -p "require('./package.json').version")
+echo "Current version: $CURRENT_VERSION"
+
+# Bump version automatically
+echo "📝 Bumping $RELEASE_TYPE version..."
 NEW_VERSION=$(npm version $RELEASE_TYPE --no-git-tag-version)
 echo "New version: $NEW_VERSION"
 
@@ -54,7 +58,9 @@ npm install --package-lock-only
 
 # Commit version bump
 git add package.json package-lock.json
-git commit -m "chore: bump version to $NEW_VERSION"
+git commit -m "chore: bump version to $NEW_VERSION
+
+Automated $RELEASE_TYPE version bump for release"
 
 # Create and push tag
 git tag $NEW_VERSION
