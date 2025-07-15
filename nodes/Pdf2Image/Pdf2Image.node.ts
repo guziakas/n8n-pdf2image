@@ -15,6 +15,9 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
+// Import our custom type definitions
+import './pdf-poppler';
+
 export class Pdf2Image implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'PDF to Image',
@@ -216,7 +219,6 @@ export class Pdf2Image implements INodeType {
 					await fs.writeFile(pdfPath, pdfBuffer);
 
 					try {
-						// Configure pdf2pic options
 						// Configure pdf-poppler options
 						const options: any = {
 							format: format === 'png' ? 'png' : 'jpeg',
@@ -225,29 +227,35 @@ export class Pdf2Image implements INodeType {
 							page: null // Will be set later for specific pages
 						};
 
-						if (format === 'jpeg') {
-							options.quality = quality;
+						// Set DPI (density)
+						if (density && density !== 150) {
+							options.pdf_flags = [`-r ${density}`];
 						}
 
+						// Set size if specified
 						if (width && height) {
-							options.size = `${width}x${height}`;
+							options.size = { width, height };
 						} else if (width) {
-							options.size = `${width}x`;
+							options.size = { width };
 						} else if (height) {
-							options.size = `x${height}`;
+							options.size = { height };
 						}
 
 						let convertResult: string[] = [];
 						
 						if (convertAllPages) {
-							// Convert all pages
+							// Convert all pages using pdf-poppler
 							convertResult = await pdf.convert(pdfPath, options);
 						} else {
 							// Parse page range and convert specific pages
 							const pages = Pdf2Image.parsePageRange(pageRange);
 							
 							for (const page of pages) {
-								const pageOptions = { ...options, page: page };
+								const pageOptions = { 
+									...options, 
+									first_page: page,
+									last_page: page
+								};
 								const pageResult = await pdf.convert(pdfPath, pageOptions);
 								convertResult.push(...pageResult);
 							}

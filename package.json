@@ -18,7 +18,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && npm run copy:assets",
-    "copy:assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" \"credentials/*.json\" dist/",
+    "copy:assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" \"nodes/**/*.d.ts\" \"credentials/*.json\" dist/",
     "dev": "tsc --watch",
     "format": "prettier nodes --write",
     "lint": "eslint nodes package.json",
