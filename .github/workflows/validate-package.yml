@@ -47,8 +47,8 @@ jobs:
             exit 1
           fi
           
-          if [ ! -f "index.js" ]; then
-            echo "❌ Entry point missing: index.js"
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Entry point missing: dist/index.js"
             exit 1
           fi
           

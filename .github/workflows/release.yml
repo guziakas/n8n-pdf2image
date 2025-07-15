@@ -26,19 +26,51 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean previous build
+        run: |
+          rm -rf dist/
+          echo "🧹 Cleaned dist directory"
+
       - name: Build package
-        run: npm run build
+        run: |
+          echo "🔨 Building package..."
+          npm run build
+          echo "✅ Build completed"
 
       - name: Verify build output
         run: |
-          echo "Checking dist structure:"
-          ls -la dist/
-          echo "Checking for main node file:"
-          ls -la dist/Pdf2Image.node.js
-          echo "Checking nodes directory:"
-          ls -la dist/nodes/ || echo "No nodes directory"
-          echo "Package.json n8n config:"
-          cat package.json | grep -A 5 '"n8n"'
+          echo "📦 Checking dist structure:"
+          if [ -d "dist" ]; then
+            ls -la dist/
+            echo ""
+            echo "📁 Checking for critical files:"
+            
+            # Check for main node file
+            if [ -f "dist/Pdf2Image.node.js" ]; then
+              echo "✅ dist/Pdf2Image.node.js found ($(wc -c < dist/Pdf2Image.node.js) bytes)"
+            else
+              echo "❌ dist/Pdf2Image.node.js MISSING"
+              exit 1
+            fi
+            
+            # Check for index file
+            if [ -f "dist/index.js" ]; then
+              echo "✅ dist/index.js found ($(wc -c < dist/index.js) bytes)"
+            else
+              echo "❌ dist/index.js MISSING"
+              exit 1
+            fi
+            
+            echo ""
+            echo "📋 Package.json n8n config:"
+            cat package.json | grep -A 5 '"n8n"' || echo "No n8n config found"
+            
+          else
+            echo "❌ dist directory not found!"
+            echo "Current directory contents:"
+            ls -la
+            exit 1
+          fi
 
       - name: Run tests (if any)
         run: npm test
