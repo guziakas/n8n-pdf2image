@@ -27,7 +27,10 @@
     "prepublishOnly": "npm run build && npm run lint -s"
   },
   "files": [
-    "dist"
+    "dist",
+    "DEPENDENCIES.md",
+    "setup-poppler.sh",
+    "setup-poppler.ps1"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,

@@ -6,19 +6,21 @@ A custom n8n node that converts PDF files to images using the pdf-poppler librar
 
 This node requires **poppler-utils** to be installed on the system where n8n is running. 
 
+> 📖 **For detailed installation instructions**, see [DEPENDENCIES.md](DEPENDENCIES.md)
+
 ### Quick Setup for Different Environments:
 
 **Docker (Recommended):**
 ```dockerfile
 FROM n8nio/n8n:latest
 USER root
-RUN apt-get update && apt-get install -y poppler-utils
+RUN apk add --no-cache poppler-utils
 USER node
 ```
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get update && sudo apt-get install -y poppler-utils
+sudo apt update && sudo apt install poppler-utils
 ```
 
 **CentOS/RHEL:**
@@ -34,6 +36,8 @@ brew install poppler
 **Windows:**
 - Download poppler for Windows and add to PATH
 - Or use WSL with Ubuntu setup
+
+> ⚠️ **Note**: This node will NOT work on n8n Cloud as system dependencies cannot be installed there.
 
 ## Features
 
@@ -161,6 +165,34 @@ Both release methods trigger the same automated pipeline:
    - Add it to GitHub: Settings → Secrets → Actions → `NPM_TOKEN`
 
 2. **GitHub Token**: Automatically provided by GitHub Actions
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Error: "PDF conversion failed: No images were generated"**
+- **Cause**: poppler-utils not installed or not accessible
+- **Solution**: Install poppler-utils using the appropriate method for your system
+- **Verify**: Run `pdftoppm --version` in your terminal
+
+**Error: "execvp failed, errno = 2 (No such file or directory)"**
+- **Cause**: poppler-utils binaries not found in system PATH
+- **Solution**: Ensure poppler-utils is properly installed and accessible
+
+**Error: "Command failed: execvp failed... gm identify"**
+- **Cause**: Old error from pdf2pic library (should not occur in latest version)
+- **Solution**: Update to latest version of the node
+
+**Docker container crashes after installation**
+- **Cause**: User permission issues
+- **Solution**: Ensure you switch back to `USER node` after installing system packages
+
+### Getting Help
+
+1. Check [DEPENDENCIES.md](DEPENDENCIES.md) for detailed installation instructions
+2. Verify poppler-utils installation: `pdftoppm --version`
+3. Check [GitHub Issues](https://github.com/guziakas/n8n-pdf2image/issues) for similar problems
+4. Create a new issue with your system details and error message
 
 ## Contributing
 
