@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-pdf2image",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "n8n node to convert PDF files to images",
   "keywords": [
     "n8n-community-node-package"
@@ -46,7 +46,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "pdf2pic": "^2.1.4"
+    "pdf-poppler": "^0.2.1"
   },
   "peerDependencies": {
     "n8n-core": "*",

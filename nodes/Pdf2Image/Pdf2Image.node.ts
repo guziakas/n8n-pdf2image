@@ -10,7 +10,7 @@ import {
 	NodeConnectionType,
 } from 'n8n-workflow';
 
-import { fromPath } from 'pdf2pic';
+import * as pdf from 'pdf-poppler';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -217,80 +217,48 @@ export class Pdf2Image implements INodeType {
 
 					try {
 						// Configure pdf2pic options
+						// Configure pdf-poppler options
 						const options: any = {
-							density,
-							saveFilename: 'page',
-							savePath: tempDir,
-							format,
+							format: format === 'png' ? 'png' : 'jpeg',
+							out_dir: tempDir,
+							out_prefix: 'page',
+							page: null // Will be set later for specific pages
 						};
 
 						if (format === 'jpeg') {
 							options.quality = quality;
 						}
 
-						if (width) {
-							options.width = width;
+						if (width && height) {
+							options.size = `${width}x${height}`;
+						} else if (width) {
+							options.size = `${width}x`;
+						} else if (height) {
+							options.size = `x${height}`;
 						}
 
-						if (height) {
-							options.height = height;
-						}
-
-						const convert = fromPath(pdfPath, options);
-						
-						let convertResult;
+						let convertResult: string[] = [];
 						
 						if (convertAllPages) {
-							// Convert all pages - bulk method returns all pages
-							const bulkResult = convert.bulk && await convert.bulk(-1);
-							convertResult = bulkResult || [];
+							// Convert all pages
+							convertResult = await pdf.convert(pdfPath, options);
 						} else {
-							// Parse page range
+							// Parse page range and convert specific pages
 							const pages = Pdf2Image.parsePageRange(pageRange);
-							convertResult = [];
 							
 							for (const page of pages) {
-								const result = await convert(page);
-								convertResult.push(result);
+								const pageOptions = { ...options, page: page };
+								const pageResult = await pdf.convert(pdfPath, pageOptions);
+								convertResult.push(...pageResult);
 							}
 						}
 
 						// Process the converted images
-						if (Array.isArray(convertResult)) {
-							// Multiple pages
-							for (let pageIndex = 0; pageIndex < convertResult.length; pageIndex++) {
-								const result = convertResult[pageIndex];
-								const imagePath = (result as any).path;
-								
-								const imageBuffer = await fs.readFile(imagePath);
-								const fileName = `page_${pageIndex + 1}.${format}`;
-								
-								const binaryData: IBinaryData = {
-									data: imageBuffer.toString(BINARY_ENCODING),
-									mimeType: format === 'png' ? 'image/png' : 'image/jpeg',
-									fileName,
-									fileExtension: format,
-								};
-
-								const newItem: INodeExecutionData = {
-									json: {
-										...items[i].json,
-										pageNumber: pageIndex + 1,
-										totalPages: convertResult.length,
-										fileName,
-									},
-									binary: {
-										[outputBinaryProperty]: binaryData,
-									},
-								};
-
-								returnData.push(newItem);
-							}
-						} else {
-							// Single page
-							const imagePath = (convertResult as any).path;
+						for (let pageIndex = 0; pageIndex < convertResult.length; pageIndex++) {
+							const imagePath = convertResult[pageIndex];
+							
 							const imageBuffer = await fs.readFile(imagePath);
-							const fileName = `page_1.${format}`;
+							const fileName = `page_${pageIndex + 1}.${format}`;
 							
 							const binaryData: IBinaryData = {
 								data: imageBuffer.toString(BINARY_ENCODING),
@@ -302,8 +270,8 @@ export class Pdf2Image implements INodeType {
 							const newItem: INodeExecutionData = {
 								json: {
 									...items[i].json,
-									pageNumber: 1,
-									totalPages: 1,
+									pageNumber: pageIndex + 1,
+									totalPages: convertResult.length,
 									fileName,
 								},
 								binary: {

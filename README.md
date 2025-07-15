@@ -1,6 +1,6 @@
 # PDF to Image Converter Node for n8n
 
-A custom n8n node that converts PDF files to images using the pdf2pic library.
+A custom n8n node that converts PDF files to images using the pdf-poppler library.
 
 ## Features
 
@@ -53,7 +53,7 @@ A custom n8n node that converts PDF files to images using the pdf2pic library.
 
 - Node.js 18+
 - n8n
-- ImageMagick (required by pdf2pic)
+- Poppler utilities (automatically handled by pdf-poppler)
 
 ## Development
 
