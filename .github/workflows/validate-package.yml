@@ -37,8 +37,8 @@ jobs:
           echo "📦 Validating package structure..."
           
           # Check if main files exist
-          if [ ! -f "dist/Pdf2Image.node.js" ]; then
-            echo "❌ Main node file missing: dist/Pdf2Image.node.js"
+          if [ ! -f "dist/nodes/Pdf2Image/Pdf2Image.node.js" ]; then
+            echo "❌ Main node file missing: dist/nodes/Pdf2Image/Pdf2Image.node.js"
             exit 1
           fi
           
@@ -54,7 +54,7 @@ jobs:
           
           # Check package.json n8n configuration
           NODE_PATH=$(node -p "require('./package.json').n8n.nodes[0]")
-          if [ "$NODE_PATH" != "dist/Pdf2Image.node.js" ]; then
+          if [ "$NODE_PATH" != "dist/nodes/Pdf2Image/Pdf2Image.node.js" ]; then
             echo "❌ n8n.nodes path mismatch in package.json: $NODE_PATH"
             exit 1
           fi

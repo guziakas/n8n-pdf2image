@@ -46,10 +46,10 @@ jobs:
             echo "📁 Checking for critical files:"
             
             # Check for main node file
-            if [ -f "dist/Pdf2Image.node.js" ]; then
-              echo "✅ dist/Pdf2Image.node.js found ($(wc -c < dist/Pdf2Image.node.js) bytes)"
+            if [ -f "dist/nodes/Pdf2Image/Pdf2Image.node.js" ]; then
+              echo "✅ dist/nodes/Pdf2Image/Pdf2Image.node.js found ($(wc -c < dist/nodes/Pdf2Image/Pdf2Image.node.js) bytes)"
             else
-              echo "❌ dist/Pdf2Image.node.js MISSING"
+              echo "❌ dist/nodes/Pdf2Image/Pdf2Image.node.js MISSING"
               exit 1
             fi
             
