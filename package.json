@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-pdf2image",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "n8n node to convert PDF files to images",
   "keywords": [
     "n8n-community-node-package"
