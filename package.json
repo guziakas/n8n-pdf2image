@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/guziakas/n8n-pdf2image.git"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc && npm run copy:assets",
     "copy:assets": "copyfiles \"nodes/**/*.svg\" \"nodes/**/*.png\" \"nodes/**/*.d.ts\" \"credentials/*.json\" dist/",

@@ -16,6 +16,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
+    "index.ts",
     "nodes/**/*",
     "credentials/**/*",
     "types/**/*"
