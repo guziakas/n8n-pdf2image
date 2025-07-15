@@ -1,3 +1,5 @@
+/// <reference path="./pdf-poppler.d.ts" />
+
 import {
 	IExecuteFunctions,
 	INodeExecutionData,
@@ -14,9 +16,6 @@ import * as pdf from 'pdf-poppler';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-
-// Import our custom type definitions
-import './pdf-poppler';
 
 export class Pdf2Image implements INodeType {
 	description: INodeTypeDescription = {
@@ -261,9 +260,27 @@ export class Pdf2Image implements INodeType {
 							}
 						}
 
+						// Check if conversion actually produced files
+						if (!convertResult || convertResult.length === 0) {
+							throw new NodeOperationError(
+								this.getNode(), 
+								'PDF conversion failed: No images were generated. This may indicate that pdf-poppler requires additional system dependencies (poppler-utils) to be installed on your system. Consider using a different n8n deployment method or contact your system administrator.'
+							);
+						}
+
 						// Process the converted images
 						for (let pageIndex = 0; pageIndex < convertResult.length; pageIndex++) {
 							const imagePath = convertResult[pageIndex];
+							
+							// Verify the file exists
+							try {
+								await fs.access(imagePath);
+							} catch (accessError) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`Generated image file not found: ${imagePath}. This suggests the PDF conversion failed silently.`
+								);
+							}
 							
 							const imageBuffer = await fs.readFile(imagePath);
 							const fileName = `page_${pageIndex + 1}.${format}`;
@@ -290,6 +307,32 @@ export class Pdf2Image implements INodeType {
 							returnData.push(newItem);
 						}
 
+					} catch (conversionError: any) {
+						// Provide helpful error messages based on the error type
+						let errorMessage = 'PDF conversion failed';
+						
+						if (conversionError.message?.includes('poppler') || 
+							conversionError.message?.includes('pdftoppm') ||
+							conversionError.message?.includes('execvp failed') ||
+							conversionError.message?.includes('No such file or directory')) {
+							
+							errorMessage = `PDF conversion failed: System dependencies missing. The pdf-poppler library requires poppler-utils to be installed on the system. 
+							
+Error details: ${conversionError.message}
+
+Solutions:
+1. Install poppler-utils on your system
+2. Use n8n in a Docker container with poppler-utils pre-installed
+3. Consider using a cloud-based PDF conversion service
+4. Deploy n8n on a system where you can install system dependencies
+
+For Docker deployment, you can extend the n8n image with:
+RUN apt-get update && apt-get install -y poppler-utils`;
+						} else {
+							errorMessage = `PDF conversion failed: ${conversionError.message}`;
+						}
+						
+						throw new NodeOperationError(this.getNode(), errorMessage);
 					} finally {
 						// Clean up temporary files
 						try {

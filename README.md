@@ -2,6 +2,39 @@
 
 A custom n8n node that converts PDF files to images using the pdf-poppler library.
 
+## ⚠️ System Requirements
+
+This node requires **poppler-utils** to be installed on the system where n8n is running. 
+
+### Quick Setup for Different Environments:
+
+**Docker (Recommended):**
+```dockerfile
+FROM n8nio/n8n:latest
+USER root
+RUN apt-get update && apt-get install -y poppler-utils
+USER node
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update && sudo apt-get install -y poppler-utils
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install poppler-utils
+```
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**Windows:**
+- Download poppler for Windows and add to PATH
+- Or use WSL with Ubuntu setup
+
 ## Features
 
 - Convert PDF files to PNG or JPEG images
